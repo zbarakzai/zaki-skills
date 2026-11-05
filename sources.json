@@ -1,0 +1,9 @@
+{
+  "sources": [
+    { "repo": "mattpocock/skills", "ref": "main", "include": ["skills/engineering/*", "skills/productivity/*", "skills/misc/*"] },
+    { "repo": "anthropics/skills", "ref": "main", "include": ["skills/*"] },
+    { "repo": "openai/skills", "ref": "main", "include": ["skills/.curated/*"] },
+    { "repo": "vercel-labs/agent-skills", "ref": "main", "include": ["skills/*"] },
+    { "repo": "vercel-labs/agent-browser", "ref": "main", "include": ["skills/*"] }
+  ]
+}
