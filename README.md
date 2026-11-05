@@ -10,7 +10,8 @@ version of every skill in it, so it's also how Zaki knows a skill you installed 
   folder name; folders starting with `.` only match when named.
 - [`build.mjs`](build.mjs) finds every folder with a `SKILL.md` that a source includes, pins it to
   the commit its branch points at, and writes each skill's name, description, files and folder hash
-  (the git tree SHA) into `catalog.json`.
+  (the git tree SHA) into `catalog.json`, and each repo's file lists into `files/<owner>/<repo>.json`.
+  The catalog stays under 1 MiB, the most Zaki reads; the file lists are only read to install or update.
 - [`.github/workflows/build.yml`](.github/workflows/build.yml) runs it every 6 hours and on every
   change here, and commits `catalog.json` when a skill changed.
 

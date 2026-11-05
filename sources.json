@@ -4,6 +4,14 @@
     { "repo": "anthropics/skills", "ref": "main", "include": ["skills/*"] },
     { "repo": "openai/skills", "ref": "main", "include": ["skills/.curated/*"] },
     { "repo": "vercel-labs/agent-skills", "ref": "main", "include": ["skills/*"] },
-    { "repo": "vercel-labs/agent-browser", "ref": "main", "include": ["skills/*"] }
+    { "repo": "vercel-labs/agent-browser", "ref": "main", "include": ["skills/*"] },
+    { "repo": "pbakaus/impeccable", "ref": "main", "include": ["plugin/skills/*"] },
+    { "repo": "Leonxlnx/taste-skill", "ref": "main", "include": ["skills/*"] },
+    { "repo": "DannyMac180/skills", "ref": "main", "include": ["be-ambitious"] },
+    { "repo": "K-Dense-AI/scientific-agent-skills", "ref": "main", "include": ["skills/*"] },
+    { "repo": "cathrynlavery/diagram-design", "ref": "main", "include": ["skills/*"] },
+    { "repo": "cursor/plugins", "ref": "main", "include": ["pstack/skills/*"] },
+    { "repo": "cloudflare/security-audit-skill", "ref": "main", "include": ["skills/*"] },
+    { "repo": "humanlayer/skills", "ref": "main", "include": ["plugins/*/skills/*"] }
   ]
 }

@@ -2,8 +2,11 @@
 // `include` patterns match, pinned to the commit its ref points at now. `*` matches one folder name.
 // Run with GITHUB_TOKEN set (Actions does); without it GitHub allows 60 API calls an hour.
 // `node build.mjs --check` exits 1 when catalog.json is out of date, without writing it.
+//
+// catalog.json is what Zaki lists and checks for updates, so it stays small (Zaki reads files up to
+// 1 MiB). Each repo's file lists are in files/<owner>/<repo>.json, read only to install or update.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 
 const API = "https://api.github.com";
 const RAW = "https://raw.githubusercontent.com";
@@ -59,6 +62,7 @@ export function openaiInterface(text) {
   return out;
 }
 
+const clip = (text, n) => (text.length > n ? `${text.slice(0, n - 1).trimEnd()}…` : text);
 const titled = (name) => name.split(/[-_]/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 const firstSentence = (text) => {
   const s = (text ?? "").split(/(?<=[.!?])\s/)[0].trim();
@@ -92,14 +96,15 @@ async function source({ repo, ref = "main", include }) {
       name,
       title: ui.display_name || titled(name),
       short: ui.short_description || firstSentence(meta.description),
-      description: meta.description ?? "",
+      description: clip(meta.description ?? "", 400),
       repo,
       path: dir,
       ref,
       commit,
       tree: folders.get(dir),
       size: files.reduce((n, f) => n + f.size, 0),
-      files,
+      count: files.length,
+      files: files.map(({ path, size }) => ({ path, size })),
     });
   }
   console.log(`${repo}@${commit.slice(0, 7)}: ${skills.length} skills`);
@@ -110,10 +115,19 @@ const { sources } = JSON.parse(readFileSync(new URL("./sources.json", import.met
 const skills = [];
 for (const s of sources) skills.push(...(await source(s)));
 
+const listed = skills.map(({ files, ...rest }) => rest);
 const file = new URL("./catalog.json", import.meta.url);
 const old = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
-const same = old && JSON.stringify(old.skills) === JSON.stringify(skills);
-const catalog = { version: 1, generated: same ? old.generated : new Date().toISOString(), sources: sources.map((s) => s.repo), skills };
+const same = old && JSON.stringify(old.skills) === JSON.stringify(listed);
+const catalog = { version: 1, generated: same ? old.generated : new Date().toISOString(), sources: sources.map((s) => s.repo), skills: listed };
 if (process.argv.includes("--check")) process.exit(same ? 0 : 1);
-writeFileSync(file, JSON.stringify(catalog, null, 1) + "\n");
+const text = JSON.stringify(catalog) + "\n";
+if (text.length > 900_000) throw new Error(`catalog.json would be ${text.length} bytes: Zaki reads at most 1 MiB`);
+writeFileSync(file, text);
+rmSync(new URL("./files", import.meta.url), { recursive: true, force: true });
+for (const repo of new Set(skills.map((s) => s.repo))) {
+  const mine = skills.filter((s) => s.repo === repo), out = new URL(`./files/${repo}.json`, import.meta.url);
+  mkdirSync(new URL(".", out), { recursive: true });
+  writeFileSync(out, JSON.stringify({ repo, commit: mine[0].commit, skills: Object.fromEntries(mine.map((s) => [s.path, { tree: s.tree, files: s.files }])) }) + "\n");
+}
 console.log(same ? "catalog.json is up to date" : `catalog.json written: ${skills.length} skills`);
